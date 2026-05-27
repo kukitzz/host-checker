@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>host-checker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.10/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    /* htmx loading indicator: fades in only during requests */
+    .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+    .htmx-request .htmx-indicator { opacity: 1; }
+    .htmx-request.htmx-indicator { opacity: 1; }
+    [x-cloak] { display: none !important; }
+    /* Better-looking checkbox in Tailwind's default theme on dark bg */
+    input[type="checkbox"] { accent-color: #06b6d4; }
+  </style>
+  <script>
+    // Re-submit the current form to /export/{format} and trigger a browser
+    // download from the JSON response. Used by the download buttons in the
+    // results fragment.
+    async function hcDownload(format) {
+      const form = document.querySelector('form[hx-post="/check/html"]');
+      if (!form) return;
+      const fd = new FormData(form);
+      let resp;
+      try {
+        resp = await fetch(`/export/${format}`, { method: 'POST', body: fd });
+      } catch (err) {
+        alert(`Export failed: ${err.message}`);
+        return;
+      }
+      if (!resp.ok) {
+        const detail = await resp.text();
+        alert(`Export failed (${resp.status}): ${detail}`);
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
+      a.href = url;
+      a.download = `hostchecker-${format}-${ts}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+  {% block content %}{% endblock %}
+</body>
+</html>

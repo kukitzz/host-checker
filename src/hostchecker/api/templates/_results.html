@@ -1,0 +1,147 @@
+{% if error %}
+  <div class="p-4 bg-red-900/30 border border-red-700 rounded-md text-red-200">
+    {{ error }}
+  </div>
+{% else %}
+<div x-data="{
+        filter: 'all',
+        sort: 'score-desc',
+        applySort() {
+          const list = this.$refs.list;
+          if (!list) return;
+          const items = Array.from(list.children);
+          items.sort((a, b) => {
+            if (this.sort === 'score-desc') return Number(b.dataset.score) - Number(a.dataset.score);
+            if (this.sort === 'score-asc')  return Number(a.dataset.score) - Number(b.dataset.score);
+            if (this.sort === 'ioc')        return a.dataset.ioc.localeCompare(b.dataset.ioc);
+            if (this.sort === 'verdict') {
+              const order = { malicious: 0, suspicious: 1, unknown: 2, clean: 3 };
+              return (order[a.dataset.verdict] ?? 99) - (order[b.dataset.verdict] ?? 99);
+            }
+            return 0;
+          });
+          items.forEach(i => list.appendChild(i));
+        }
+     }"
+     x-init="applySort(); $watch('sort', () => applySort())"
+     x-cloak>
+
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-sm">
+    <span class="text-slate-400">
+      {{ response.reports|length }} IOC{% if response.reports|length != 1 %}s{% endif %} •
+      {{ response.providers_enabled|length }} providers •
+      {{ "%.2f"|format(response.elapsed_seconds) }}s
+    </span>
+
+    <div class="flex items-center gap-1 ml-auto">
+      <span class="text-slate-400 text-xs mr-1">Download:</span>
+      <button type="button" onclick="hcDownload('json')"
+              class="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 border border-slate-700">JSON</button>
+      <button type="button" onclick="hcDownload('misp')"
+              class="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 border border-slate-700">MISP</button>
+      <button type="button" onclick="hcDownload('stix')"
+              class="px-2 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 border border-slate-700">STIX</button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label class="text-slate-400 text-xs">Filter:</label>
+      <select x-model="filter"
+              class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs">
+        <option value="all">all</option>
+        <option value="malicious">malicious</option>
+        <option value="suspicious">suspicious</option>
+        <option value="clean">clean</option>
+        <option value="unknown">unknown</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <label class="text-slate-400 text-xs">Sort:</label>
+      <select x-model="sort"
+              class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs">
+        <option value="score-desc">score (high→low)</option>
+        <option value="score-asc">score (low→high)</option>
+        <option value="verdict">verdict</option>
+        <option value="ioc">IOC value</option>
+      </select>
+    </div>
+  </div>
+
+  <div x-ref="list" class="space-y-2">
+    {% for report in response.reports %}
+      {% set v = report.aggregate_verdict.value %}
+      <details data-verdict="{{ v }}"
+               data-score="{{ report.aggregate_score }}"
+               data-ioc="{{ report.ioc }}"
+               x-show="filter === 'all' || filter === '{{ v }}'"
+               class="bg-slate-900 border-l-4 rounded-r-md overflow-hidden
+                      {% if v == 'malicious' %}border-red-500
+                      {% elif v == 'suspicious' %}border-yellow-500
+                      {% elif v == 'clean' %}border-green-500
+                      {% else %}border-slate-600{% endif %}">
+        <summary class="p-3 cursor-pointer flex flex-wrap items-center gap-3 hover:bg-slate-800/40 select-none">
+          <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide
+                       {% if v == 'malicious' %}bg-red-500/20 text-red-300
+                       {% elif v == 'suspicious' %}bg-yellow-500/20 text-yellow-300
+                       {% elif v == 'clean' %}bg-green-500/20 text-green-300
+                       {% else %}bg-slate-700 text-slate-300{% endif %}">
+            {{ v }}
+          </span>
+          <span class="font-mono break-all">{{ report.ioc }}</span>
+          <span class="text-xs text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">{{ report.ioc_type.value }}</span>
+          <span class="text-xs text-slate-400">score <span class="font-mono">{{ report.aggregate_score }}</span></span>
+          {% if report.pivoted_from %}
+            <span class="text-xs text-slate-500 italic">↳ from {{ report.pivoted_from }}</span>
+          {% endif %}
+          <span class="ml-auto text-xs text-slate-500 font-mono">
+            <span class="text-red-400">{{ report.malicious_count }}M</span>
+            / <span class="text-yellow-400">{{ report.suspicious_count }}S</span>
+            / <span class="text-green-400">{{ report.clean_count }}C</span>
+          </span>
+        </summary>
+
+        <div class="border-t border-slate-800 overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-slate-400 text-xs uppercase tracking-wide bg-slate-900/60">
+                <th class="text-left px-3 py-2 font-medium">Provider</th>
+                <th class="text-left px-3 py-2 font-medium">Verdict</th>
+                <th class="text-left px-3 py-2 font-medium">Summary</th>
+                <th class="text-left px-3 py-2 font-medium">Tags</th>
+                <th class="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in report.results %}
+                {% set rv = r.verdict.value %}
+                <tr class="border-t border-slate-800 hover:bg-slate-800/30 align-top">
+                  <td class="px-3 py-2 font-mono text-xs whitespace-nowrap">{{ r.provider }}</td>
+                  <td class="px-3 py-2 text-xs
+                             {% if rv == 'malicious' %}text-red-300
+                             {% elif rv == 'suspicious' %}text-yellow-300
+                             {% elif rv == 'clean' %}text-green-300
+                             {% elif rv == 'error' %}text-orange-300
+                             {% else %}text-slate-400{% endif %}">{{ rv }}</td>
+                  <td class="px-3 py-2 text-slate-300">{{ r.summary or '' }}</td>
+                  <td class="px-3 py-2 text-xs text-slate-500">{{ r.tags|join(', ') }}</td>
+                  <td class="px-3 py-2 text-right whitespace-nowrap">
+                    <button type="button"
+                            data-json="{{ r.model_dump_json() }}"
+                            @click="navigator.clipboard.writeText($el.dataset.json);
+                                    const orig = $el.textContent;
+                                    $el.textContent = 'copied!';
+                                    setTimeout(() => $el.textContent = orig, 1200)"
+                            class="text-xs text-cyan-400 hover:text-cyan-300">
+                      copy json
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

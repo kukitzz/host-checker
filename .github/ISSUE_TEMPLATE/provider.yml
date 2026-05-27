@@ -1,0 +1,39 @@
+name: ➕ New provider
+description: Suggest a new threat-intel source.
+labels: [provider, enhancement]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Provider name
+      placeholder: e.g. SecurityTrails passive DNS
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: API docs URL
+    validations:
+      required: true
+  - type: dropdown
+    id: ioc-types
+    attributes:
+      label: Supported IOC types
+      multiple: true
+      options: [IPv4, IPv6, CIDR, domain, URL, MD5, SHA1, SHA256]
+    validations:
+      required: true
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Free tier?
+      options: ["Yes, no signup", "Yes, free API key", "Free tier with limits", "Paid only"]
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this provider?
+      description: What does it tell you that the existing 11 don't?
+    validations:
+      required: true

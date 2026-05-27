@@ -1,0 +1,58 @@
+name: 🐛 Bug report
+description: Something isn't working the way the docs / code suggest it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear, concrete description. Include the IOC(s) you ran against if relevant — defang them if they're real.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal commands. The shorter, the better.
+      placeholder: |
+        1. `pip install -e .`
+        2. `hostchecker check ...`
+        3. Output is X, expected Y.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: host-checker version
+      description: Output of `hostchecker --version` or the commit hash.
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: Output of `python --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      options:
+        - CLI
+        - HTTP JSON API
+        - Web UI
+        - Library import
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / tracebacks
+      render: shell

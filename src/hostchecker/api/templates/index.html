@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto p-4 sm:p-6">
+  <header class="mb-6 flex items-baseline gap-3 flex-wrap">
+    <h1 class="text-3xl font-bold text-cyan-400">host-checker</h1>
+    <span class="text-sm text-slate-500">v{{ version }}</span>
+    <p class="text-slate-400 text-sm">— multi-source threat-intel for IPs, domains, URLs and hashes.</p>
+  </header>
+
+  <form hx-post="/check/html"
+        hx-target="#results"
+        hx-indicator="#spinner"
+        hx-swap="innerHTML"
+        class="space-y-4 mb-6 bg-slate-900/50 p-5 rounded-lg border border-slate-800">
+    <div x-data>
+      <label class="block text-sm font-medium text-slate-300 mb-2">
+        IOCs <span class="text-slate-500 text-xs">(comma or whitespace separated, defang OK)</span>
+      </label>
+      <textarea name="targets" rows="3" required
+                x-init="$el.value = localStorage.getItem('hc:lastQuery') || ''"
+                @input="localStorage.setItem('hc:lastQuery', $el.value)"
+                class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-md font-mono text-sm focus:border-cyan-500 focus:outline-none"
+                placeholder="8.8.8.8, evil[.]com, hxxps://malicious[.]example/path, d41d8cd98f00b204e9800998ecf8427e"></textarea>
+    </div>
+
+    <div class="flex flex-wrap gap-4 text-sm">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="auto_pivot" value="true" checked>
+        <span>Auto-pivot domains → IPs</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" name="no_cache" value="true">
+        <span>Bypass cache</span>
+      </label>
+    </div>
+
+    <details class="text-sm">
+      <summary class="cursor-pointer text-slate-400 hover:text-slate-200 select-none">
+        Providers <span class="text-xs">({{ enabled_count }} enabled / {{ all_providers|length }} total)</span>
+      </summary>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-3 pl-4">
+        {% for p in all_providers %}
+          <label class="flex items-center gap-2 {% if not p.enabled %}opacity-50{% endif %}"
+                 {% if not p.enabled %}title="No API key configured"{% endif %}>
+            <input type="checkbox" name="providers" value="{{ p.name }}"
+                   {% if p.enabled %}checked{% else %}disabled{% endif %}>
+            <span class="font-mono text-xs">{{ p.name }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </details>
+
+    <div class="flex items-center gap-3">
+      <button type="submit"
+              class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-md font-medium transition-colors">
+        Check
+      </button>
+      <span id="spinner" class="htmx-indicator text-sm text-slate-400">
+        <span class="inline-block animate-spin">⏳</span> running…
+      </span>
+    </div>
+  </form>
+
+  <div id="results"></div>
+
+  <footer class="mt-12 text-center text-xs text-slate-600">
+    <a href="/docs" class="hover:text-slate-400">API docs</a> ·
+    <a href="https://github.com/YOUR_USER/host-checker" class="hover:text-slate-400">source</a>
+  </footer>
+</div>
+{% endblock %}
