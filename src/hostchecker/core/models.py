@@ -18,6 +18,7 @@ class Verdict(str, Enum):
     MALICIOUS = "malicious"
     UNKNOWN = "unknown"  # provider doesn't have data
     ERROR = "error"  # provider returned an error / was unreachable
+    RATE_LIMITED = "rate_limited"  # provider rate-limited us even after retries
     SKIPPED = "skipped"  # provider doesn't support this IOC type or has no key
 
 
@@ -27,6 +28,7 @@ _VERDICT_SCORE: dict[Verdict, int] = {
     Verdict.UNKNOWN: 0,
     Verdict.SKIPPED: 0,
     Verdict.ERROR: 0,
+    Verdict.RATE_LIMITED: 0,
     Verdict.SUSPICIOUS: 1,
     Verdict.MALICIOUS: 2,
 }

@@ -135,6 +135,8 @@ All settings live in `.env` (see `.env.example`). Keys are read once at startup.
 | ---------------------- | ---------------------- | ---------------------------------------- |
 | `HC_REQUEST_TIMEOUT`   | `15.0`                 | Per-request HTTP timeout (seconds).      |
 | `HC_MAX_CONCURRENCY`   | `10`                   | Max in-flight provider queries.          |
+| `HC_MAX_RETRIES`       | `3`                    | Retries on 429/502/503/504 & net errors. |
+| `HC_RETRY_BACKOFF_BASE`| `0.5`                  | Base seconds for backoff (full jitter).  |
 | `HC_CACHE_DIR`         | `.hostchecker-cache`   | Local cache directory.                   |
 | `HC_CACHE_TTL`         | `3600`                 | Cache TTL (seconds, `0` disables).       |
 | `HC_AUTO_PIVOT`        | `true`                 | Resolve domain IOCs to IPs and check.    |
@@ -256,7 +258,6 @@ In the web UI a **Download** row above the results lets you pull the same three 
 ## Roadmap
 
 - SecurityTrails passive DNS, RDAP / WHOIS enrichment, AbuseIPDB v3 when available.
-- Retry-with-backoff on 429s, per-provider rate-limit awareness.
 - Optional sqlite cache backend (the current file-per-entry layout doesn't scale past tens of thousands of entries).
 - Web UI: query history sidebar, side-by-side IOC comparison.
 

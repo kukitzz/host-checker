@@ -121,6 +121,7 @@
                              {% elif rv == 'suspicious' %}text-yellow-300
                              {% elif rv == 'clean' %}text-green-300
                              {% elif rv == 'error' %}text-orange-300
+                             {% elif rv == 'rate_limited' %}text-fuchsia-300
                              {% else %}text-slate-400{% endif %}">{{ rv }}</td>
                   <td class="px-3 py-2 text-slate-300">{{ r.summary or '' }}</td>
                   <td class="px-3 py-2 text-xs text-slate-500">{{ r.tags|join(', ') }}</td>

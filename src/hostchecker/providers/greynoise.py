@@ -9,6 +9,7 @@ from __future__ import annotations
 import httpx
 
 from ..config import settings
+from ..core.http import request_with_retry
 from ..core.ioc import IOC, IOCType
 from ..core.models import ProviderResult, Verdict
 from ..core.registry import register
@@ -28,7 +29,7 @@ class GreyNoiseProvider(Provider):
 
     async def query(self, ioc: IOC, client: httpx.AsyncClient) -> ProviderResult:
         headers = {"Accept": "application/json", "key": self.api_key() or ""}
-        resp = await client.get(_URL.format(ip=ioc.value), headers=headers)
+        resp = await request_with_retry(client, "GET", _URL.format(ip=ioc.value), headers=headers)
 
         if resp.status_code == 404:
             return ProviderResult(
@@ -40,7 +41,7 @@ class GreyNoiseProvider(Provider):
             )
         if resp.status_code == 429:
             return ProviderResult(
-                provider=self.name, verdict=Verdict.ERROR, summary="GreyNoise rate limited"
+                provider=self.name, verdict=Verdict.RATE_LIMITED, summary="GreyNoise rate limited"
             )
         if resp.status_code != 200:
             return ProviderResult(

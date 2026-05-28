@@ -10,6 +10,7 @@ from __future__ import annotations
 import httpx
 
 from ..config import settings
+from ..core.http import request_with_retry
 from ..core.ioc import IOC, IOCType
 from ..core.models import ProviderResult, Verdict
 from ..core.registry import register
@@ -37,7 +38,7 @@ class ThreatFoxProvider(Provider):
     async def query(self, ioc: IOC, client: httpx.AsyncClient) -> ProviderResult:
         headers = {"Auth-Key": self.api_key() or "", "Accept": "application/json"}
         body = {"query": "search_ioc", "search_term": ioc.value}
-        resp = await client.post(_URL, headers=headers, json=body)
+        resp = await request_with_retry(client, "POST", _URL, headers=headers, json=body)
 
         if resp.status_code != 200:
             return ProviderResult(

@@ -13,6 +13,7 @@ from __future__ import annotations
 import httpx
 
 from ..config import settings
+from ..core.http import request_with_retry
 from ..core.ioc import IOC, IOCType
 from ..core.models import ProviderResult, Verdict
 from ..core.registry import register
@@ -31,7 +32,7 @@ class ShodanProvider(Provider):
         return settings.shodan_api_key
 
     async def query(self, ioc: IOC, client: httpx.AsyncClient) -> ProviderResult:
-        resp = await client.get(
+        resp = await request_with_retry(client, "GET", 
             _URL.format(ip=ioc.value),
             params={"key": self.api_key() or ""},
         )

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- HTTP retry/backoff for transient upstream failures (429/502/503/504 and
+  network errors), honouring `Retry-After`. Configurable via `HC_MAX_RETRIES`
+  and `HC_RETRY_BACKOFF_BASE`.
+- New `rate_limited` verdict, distinct from `error`, excluded from the
+  aggregate score and rendered distinctly in the CLI and web UI.
+
 ## [0.1.0] — initial public release
 
 ### Added

@@ -37,7 +37,7 @@ def aggregate(report: IOCReport, weights: dict[str, float] | None = None) -> IOC
     queried = 0
 
     for r in report.results:
-        if r.verdict in (Verdict.SKIPPED, Verdict.ERROR):
+        if r.verdict in (Verdict.SKIPPED, Verdict.ERROR, Verdict.RATE_LIMITED):
             continue
         queried += 1
         provider_weight = w.get(r.provider, 1.0)

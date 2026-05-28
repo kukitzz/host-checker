@@ -44,6 +44,7 @@ _VERDICT_STYLES = {
     Verdict.CLEAN: "green",
     Verdict.UNKNOWN: "dim",
     Verdict.ERROR: "red",
+    Verdict.RATE_LIMITED: "magenta",
     Verdict.SKIPPED: "dim",
 }
 

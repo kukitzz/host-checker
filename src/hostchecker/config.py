@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     # Runtime knobs.
     request_timeout: float = Field(default=15.0, description="Per-request HTTP timeout (s).")
     max_concurrency: int = Field(default=10, description="Max parallel provider queries.")
+    max_retries: int = Field(
+        default=3, description="Max retries on 429/502/503/504 and network errors."
+    )
+    retry_backoff_base: float = Field(
+        default=0.5, description="Base seconds for exponential backoff with jitter."
+    )
     cache_dir: str = Field(default=".hostchecker-cache", description="Local cache directory.")
     cache_ttl: int = Field(default=3600, description="Cache TTL in seconds (0 disables).")
     allowlist_file: str | None = Field(

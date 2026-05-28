@@ -18,6 +18,7 @@ from __future__ import annotations
 import httpx
 
 from ..config import settings
+from ..core.http import request_with_retry
 from ..core.ioc import IOC, IOCType
 from ..core.models import ProviderResult, Verdict
 from ..core.registry import register
@@ -44,7 +45,9 @@ class URLhausProvider(Provider):
     async def _post(
         self, client: httpx.AsyncClient, path: str, data: dict[str, str]
     ) -> dict | None:
-        resp = await client.post(f"{_BASE}/{path}/", data=data, headers=self._headers())
+        resp = await request_with_retry(
+            client, "POST", f"{_BASE}/{path}/", data=data, headers=self._headers()
+        )
         if resp.status_code != 200:
             return None
         try:

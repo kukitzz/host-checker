@@ -60,7 +60,7 @@ class Cache:
         if not self.enabled:
             return
         # Don't cache transient failures or skips — we want retries.
-        if result.verdict in (Verdict.ERROR, Verdict.SKIPPED):
+        if result.verdict in (Verdict.ERROR, Verdict.SKIPPED, Verdict.RATE_LIMITED):
             return
         path = self._path(provider, ioc)
         with contextlib.suppress(OSError):  # disk full, perms, etc.

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import httpx
 
+from ..core.http import request_with_retry
 from ..core.ioc import IOC, IOCType
 from ..core.models import ProviderResult, Verdict
 from ..core.registry import register
@@ -22,7 +23,7 @@ class CrtShProvider(Provider):
 
     async def query(self, ioc: IOC, client: httpx.AsyncClient) -> ProviderResult:
         url = f"https://crt.sh/?q={ioc.value}&output=json"
-        resp = await client.get(url, headers={"Accept": "application/json"})
+        resp = await request_with_retry(client, "GET", url, headers={"Accept": "application/json"})
         if resp.status_code != 200:
             return ProviderResult(
                 provider=self.name,

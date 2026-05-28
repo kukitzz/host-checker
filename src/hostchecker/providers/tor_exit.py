@@ -10,6 +10,7 @@ import asyncio
 
 import httpx
 
+from ..core.http import request_with_retry
 from ..core.ioc import IOC, IOCType
 from ..core.models import ProviderResult, Verdict
 from ..core.registry import register
@@ -32,7 +33,7 @@ class TorExitProvider(Provider):
             return TorExitProvider._cache
         async with TorExitProvider._lock:
             if TorExitProvider._cache is None:
-                resp = await client.get(_LIST_URL)
+                resp = await request_with_retry(client, "GET", _LIST_URL)
                 resp.raise_for_status()
                 TorExitProvider._cache = {
                     line.strip() for line in resp.text.splitlines() if line.strip()
