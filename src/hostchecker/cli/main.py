@@ -163,7 +163,11 @@ def check(
             raise typer.Exit(code=2)
 
     allowlist = Allowlist(allowlist_path or _settings.allowlist_file)
-    cache = Cache(_settings.cache_dir, 0 if no_cache else _settings.cache_ttl)
+    cache = Cache(
+        _settings.cache_dir,
+        0 if no_cache else _settings.cache_ttl,
+        _settings.cache_backend,
+    )
 
     response = asyncio.run(
         check_iocs(
@@ -224,6 +228,39 @@ def serve(
     import uvicorn
 
     uvicorn.run("hostchecker.api.app:app", host=host, port=port, reload=reload)
+
+
+@app.command()
+def cache(
+    action: Annotated[
+        str, typer.Argument(help="One of: status, purge (expired), clear (all).")
+    ] = "status",
+) -> None:
+    """Inspect or maintain the local result cache."""
+    from ..config import settings as _settings
+    from ..core.cache import Cache
+
+    c = Cache(_settings.cache_dir, _settings.cache_ttl, _settings.cache_backend)
+    if not c.enabled:
+        console.print("[yellow]Cache is disabled (HC_CACHE_TTL=0).[/yellow]")
+        raise typer.Exit()
+
+    if action == "status":
+        console.print(
+            f"Backend: [cyan]{c.backend_name}[/cyan] • "
+            f"dir: [cyan]{_settings.cache_dir}[/cyan] • "
+            f"TTL: [cyan]{_settings.cache_ttl}s[/cyan] • "
+            f"entries: [cyan]{c.count()}[/cyan]"
+        )
+    elif action == "purge":
+        n = c.purge_expired()
+        console.print(f"Purged [cyan]{n}[/cyan] expired entr{'y' if n == 1 else 'ies'}.")
+    elif action == "clear":
+        n = c.clear()
+        console.print(f"Cleared [cyan]{n}[/cyan] entr{'y' if n == 1 else 'ies'}.")
+    else:
+        console.print(f"[red]Unknown action:[/red] {action}. Use status, purge or clear.")
+        raise typer.Exit(code=2)
 
 
 def main() -> None:  # pragma: no cover — console_scripts entry point

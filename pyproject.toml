@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hostchecker"
+name = "ioc-hostchecker"
 version = "0.1.0"
 description = "Query IPs, domains, URLs and file hashes against multiple threat intel sources in one shot."
 readme = "README.md"
@@ -45,8 +45,8 @@ dev = [
 hostchecker = "hostchecker.cli.main:app"
 
 [project.urls]
-Repository = "https://github.com/YOUR_USER/host-checker"
-Issues = "https://github.com/YOUR_USER/host-checker/issues"
+Repository = "https://github.com/kukitzz/host-checker"
+Issues = "https://github.com/kukitzz/host-checker/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hostchecker"]

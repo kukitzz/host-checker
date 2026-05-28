@@ -44,5 +44,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status == 200 else 1)"
 
 # Default to the web UI / API; override for the CLI:
-#   docker run --rm -it ghcr.io/YOUR_USER/host-checker hostchecker check 8.8.8.8
+#   docker run --rm -it ghcr.io/kukitzz/host-checker hostchecker check 8.8.8.8
 CMD ["hostchecker", "serve", "--host", "0.0.0.0", "--port", "8000"]

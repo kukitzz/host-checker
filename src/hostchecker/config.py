@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     abusech_auth_key: str | None = None
     shodan_api_key: str | None = None
     ipinfo_api_key: str | None = None
+    securitytrails_api_key: str | None = None
 
     # Runtime knobs.
     request_timeout: float = Field(default=15.0, description="Per-request HTTP timeout (s).")
@@ -37,6 +38,9 @@ class Settings(BaseSettings):
     )
     cache_dir: str = Field(default=".hostchecker-cache", description="Local cache directory.")
     cache_ttl: int = Field(default=3600, description="Cache TTL in seconds (0 disables).")
+    cache_backend: str = Field(
+        default="file", description="Cache backend: 'file' or 'sqlite'."
+    )
     allowlist_file: str | None = Field(
         default=None,
         description="Optional path to an allowlist file (one IP/CIDR/domain per line).",

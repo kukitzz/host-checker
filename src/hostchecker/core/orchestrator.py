@@ -131,7 +131,11 @@ async def check_iocs(  # noqa: PLR0913 — orchestration entry point
     started = time.perf_counter()
     providers = providers if providers is not None else enabled_providers()
     allowlist = allowlist if allowlist is not None else Allowlist(settings.allowlist_file)
-    cache = cache if cache is not None else Cache(settings.cache_dir, settings.cache_ttl)
+    cache = (
+        cache
+        if cache is not None
+        else Cache(settings.cache_dir, settings.cache_ttl, settings.cache_backend)
+    )
     auto_pivot = settings.auto_pivot if auto_pivot is None else auto_pivot
     pivot_limit = settings.pivot_limit if pivot_limit is None else pivot_limit
 

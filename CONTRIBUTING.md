@@ -5,7 +5,7 @@ Thanks for considering a contribution. The project is small enough that you shou
 ## Getting set up
 
 ```bash
-git clone https://github.com/YOUR_USER/host-checker.git
+git clone https://github.com/kukitzz/host-checker.git
 cd host-checker
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"

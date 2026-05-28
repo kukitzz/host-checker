@@ -1,6 +1,6 @@
 # host-checker
 
-[![CI](https://github.com/YOUR_USER/host-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/host-checker/actions/workflows/ci.yml)
+[![CI](https://github.com/kukitzz/host-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/kukitzz/host-checker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](pyproject.toml)
 
@@ -30,6 +30,7 @@
 | --------------- | -------------------------------------------- | ------------ | ---------------- |
 | `tor_exit`      | IPv4, IPv6                                   | no           | unlimited        |
 | `crtsh`         | domain                                       | no           | unlimited        |
+| `rdap`          | domain, IPv4, IPv6                           | no           | unlimited        |
 | `urlhaus`       | IPv4, domain, URL, MD5, SHA256               | no (key bumps limits) | abuse.ch    |
 | `ipinfo`        | IPv4, IPv6                                   | no (key bumps limits) | 50k/month   |
 | `virustotal`    | IP, domain, URL, MD5, SHA1, SHA256           | yes          | 500/day          |
@@ -39,8 +40,11 @@
 | `threatfox`     | IPv4, domain, URL, MD5, SHA1, SHA256         | yes (abuse.ch) | unlimited      |
 | `malwarebazaar` | MD5, SHA1, SHA256                            | yes (abuse.ch) | unlimited      |
 | `shodan`        | IPv4, IPv6                                   | yes          | $5 one-time      |
+| `securitytrails`| domain, IPv4                                 | yes          | 50/month         |
 
 `abuse.ch` providers (`urlhaus`, `threatfox`, `malwarebazaar`) share a single Auth-Key — register once at <https://auth.abuse.ch/> and put it in `HC_ABUSECH_AUTH_KEY`.
+
+`rdap` is keyless and gives you **domain registration age** (newly-registered domains are flagged suspicious) plus registrar and IP network ownership — a great default-on signal.
 
 Adding more sources is a single file — see [Adding a provider](#adding-a-provider).
 
@@ -49,13 +53,15 @@ Adding more sources is a single file — see [Adding a provider](#adding-a-provi
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USER/host-checker.git
+git clone https://github.com/kukitzz/host-checker.git
 cd host-checker
 pip install -e ".[dev]"
 cp .env.example .env  # then fill in the keys you have
 ```
 
 Python 3.11+ required.
+
+> The PyPI distribution is published as **`ioc-hostchecker`** (the plain `hostchecker` name was already taken). The import package and the CLI command are both still `hostchecker`, so once published you'd `pip install ioc-hostchecker` and then run `hostchecker check ...`.
 
 ### Docker
 
@@ -64,11 +70,11 @@ Python 3.11+ required.
 docker run --rm -p 8000:8000 \
   --env-file .env \
   -v "$PWD/.hostchecker-cache:/var/cache/hostchecker" \
-  ghcr.io/YOUR_USER/host-checker:latest
+  ghcr.io/kukitzz/host-checker:latest
 # → open http://localhost:8000/
 
 # Or run the CLI inside the container:
-docker run --rm --env-file .env ghcr.io/YOUR_USER/host-checker:latest \
+docker run --rm --env-file .env ghcr.io/kukitzz/host-checker:latest \
   hostchecker check 8.8.8.8 evil[.]com
 ```
 
@@ -139,6 +145,7 @@ All settings live in `.env` (see `.env.example`). Keys are read once at startup.
 | `HC_RETRY_BACKOFF_BASE`| `0.5`                  | Base seconds for backoff (full jitter).  |
 | `HC_CACHE_DIR`         | `.hostchecker-cache`   | Local cache directory.                   |
 | `HC_CACHE_TTL`         | `3600`                 | Cache TTL (seconds, `0` disables).       |
+| `HC_CACHE_BACKEND`     | `file`                 | `file` or `sqlite`.                      |
 | `HC_AUTO_PIVOT`        | `true`                 | Resolve domain IOCs to IPs and check.    |
 | `HC_PIVOT_LIMIT`       | `5`                    | Max IPs to pivot to per domain.          |
 | `HC_ALLOWLIST_FILE`    | `(none)`               | Path to a plain-text allowlist file.     |
@@ -159,17 +166,22 @@ Disable per-run with `--no-pivot`, globally with `HC_AUTO_PIVOT=false`. Cap the 
 
 ## Caching
 
-Provider results are cached on disk under `HC_CACHE_DIR` keyed by `(provider, ioc_type, ioc_value)`. Entries older than `HC_CACHE_TTL` are ignored, and errors / skipped results are never cached. Two ways to bypass it:
+Provider results are cached on disk keyed by `(provider, ioc_type, ioc_value)`. Entries older than `HC_CACHE_TTL` are ignored, and errors / skipped / rate-limited results are never cached. Two backends:
+
+- **`file`** (default) — one JSON file per entry. Zero setup, human-inspectable.
+- **`sqlite`** — a single SQLite database. Use it once you're checking thousands of IOCs: indexed lookups and a one-statement purge instead of a directory full of files. Enable with `HC_CACHE_BACKEND=sqlite`.
+
+Inspect and maintain the cache:
 
 ```bash
-# Per-run, leaves the cache files in place:
-hostchecker check 8.8.8.8 --no-cache
-
-# Disable globally by setting:
-HC_CACHE_TTL=0
+hostchecker cache status   # backend, dir, TTL, entry count
+hostchecker cache purge    # delete only expired entries
+hostchecker cache clear    # delete everything
 ```
 
-Want to wipe? `rm -rf .hostchecker-cache/`.
+Bypass it for a single run with `--no-cache`, or disable globally with `HC_CACHE_TTL=0`.
+
+> Note: switching backends doesn't migrate existing entries — the cache is regenerable, so just let it repopulate (or `hostchecker cache clear` first).
 
 ## Allowlist
 
@@ -257,8 +269,7 @@ In the web UI a **Download** row above the results lets you pull the same three 
 
 ## Roadmap
 
-- SecurityTrails passive DNS, RDAP / WHOIS enrichment, AbuseIPDB v3 when available.
-- Optional sqlite cache backend (the current file-per-entry layout doesn't scale past tens of thousands of entries).
+- AbuseIPDB v3 when available; VirusTotal relationship pivoting.
 - Web UI: query history sidebar, side-by-side IOC comparison.
 
 ## License

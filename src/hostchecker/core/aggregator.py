@@ -23,6 +23,8 @@ DEFAULT_WEIGHTS: dict[str, float] = {
     "greynoise": 1.0,
     "shodan": 0.8,            # vuln-driven, weaker malice signal
     "ipinfo": 0.5,            # mostly enrichment
+    "securitytrails": 0.7,    # fast-flux signal, but noisy
+    "rdap": 0.6,              # newly-registered is a real but weak signal
     "tor_exit": 0.5,          # being a Tor exit isn't malicious by itself
     "crtsh": 0.1,             # informational
 }

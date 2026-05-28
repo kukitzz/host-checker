@@ -158,7 +158,11 @@ async def check_html(
         iocs,
         providers=selected,
         allowlist=Allowlist(_settings.allowlist_file),
-        cache=Cache(_settings.cache_dir, 0 if no_cache else _settings.cache_ttl),
+        cache=Cache(
+            _settings.cache_dir,
+            0 if no_cache else _settings.cache_ttl,
+            _settings.cache_backend,
+        ),
         auto_pivot=auto_pivot,
     )
     return templates.TemplateResponse(
@@ -215,7 +219,11 @@ async def export_endpoint(
         iocs,
         providers=selected,
         allowlist=Allowlist(_settings.allowlist_file),
-        cache=Cache(_settings.cache_dir, 0 if no_cache else _settings.cache_ttl),
+        cache=Cache(
+            _settings.cache_dir,
+            0 if no_cache else _settings.cache_ttl,
+            _settings.cache_backend,
+        ),
         auto_pivot=auto_pivot,
     )
 

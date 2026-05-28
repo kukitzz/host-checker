@@ -7,6 +7,8 @@ from . import (  # noqa: F401
     ipinfo,
     malwarebazaar,
     otx,
+    rdap,
+    securitytrails,
     shodan,
     threatfox,
     tor_exit,
